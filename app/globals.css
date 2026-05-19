@@ -63,7 +63,7 @@ h1 { margin: 0; font-size: 16px; letter-spacing: .01em; line-height: 1.1; }
 .bad { color: #ff8a86; }
 
 .pattern { display: inline-flex; gap: 2px; align-items: center; }
-.mark { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; font-weight: 900; line-height: 1; }
+.mark { width: 15px; height: 15px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; font-weight: 900; line-height: 1; }
 .hit-mark, .hit-sample { color: #00170d; background: var(--green); border-color: rgba(0,193,118,.8); }
 .miss-mark, .miss-sample { color: #ffd1cf; background: var(--red-dim); border-color: rgba(217,83,79,.42); }
 
@@ -78,13 +78,14 @@ h1 { margin: 0; font-size: 16px; letter-spacing: .01em; line-height: 1.1; }
 .market-card { min-width: 0; }
 .team-table th:first-child, .team-table td:first-child { width: 24px; }
 .team-table th:nth-child(2), .team-table td:nth-child(2) { min-width: 130px; }
-.team-table th:nth-child(6), .team-table td:nth-child(6) { width: 176px; }
+.team-table th:nth-child(6), .team-table td:nth-child(6) { width: 164px; max-width: 164px; overflow: hidden; }
 
 .alert { margin: 8px 0; border: 1px solid rgba(217,83,79,.55); background: var(--red-dim); color: #ffd1cf; padding: 8px 10px; }
 .loading { padding: 14px; margin-top: 8px; color: var(--muted); }
 .footer-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
 
-@media (max-width: 1160px) { .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .status-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1420px) { .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1160px) { .status-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) {
   .page { width: min(100% - 12px, 1480px); padding-top: 6px; }
   .topbar { align-items: flex-start; flex-direction: column; }
