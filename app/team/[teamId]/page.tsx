@@ -14,47 +14,67 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
 
   return (
     <main className="page">
-      <section className="header">
-        <div>
-          <p className="eyebrow">Team detail</p>
-          <h1>{team.teamName}</h1>
-          <p className="lede">Top 3 by games with at least one hit in each player&apos;s last 10 games. Updated in San Francisco time: {data.generatedAtSanFrancisco}</p>
+      <header className="topbar">
+        <div className="brand">
+          <span className="logo-mark">{team.abbreviation}</span>
+          <div>
+            <h1>{team.teamName}</h1>
+            <p>Top 3 by games with 1+ hit in last 10. Updated SF: {data.generatedAtSanFrancisco}</p>
+          </div>
         </div>
-        <Link className="btn" href="/">Back</Link>
-      </section>
+        <div className="actions">
+          <Link className="btn" href="/">Back</Link>
+        </div>
+      </header>
 
-      <section className="card table-wrap">
-        <h2>Top 3 hit consistency</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Player</th>
-              <th>Position</th>
-              <th>Hit Games</th>
-              <th>No-Hit Games</th>
-              <th>Total Hits</th>
-              <th>Rate</th>
-              <th>Last 10</th>
-              <th>Last Game</th>
-            </tr>
-          </thead>
-          <tbody>
-            {team.players.map((player, index) => (
-              <tr key={player.playerId}>
-                <td>{index + 1}</td>
-                <td><strong>{player.name}</strong></td>
-                <td>{player.position}</td>
-                <td>{player.gamesWithHit}/{player.games}</td>
-                <td>{player.gamesWithoutHit}</td>
-                <td>{player.hits}</td>
-                <td>{player.hitRate}</td>
-                <td>{player.gamePattern.map((game) => (game.hadHit ? 'H' : '0')).join(' ')}</td>
-                <td>{player.lastGameLine}</td>
+      <section className="panel table-panel">
+        <div className="panel-head">
+          <div>
+            <span className="section-label">Team board</span>
+            <h2>Hit consistency</h2>
+          </div>
+          <span className="micro-copy">Ranked by hit games</span>
+        </div>
+        <div className="table-scroll">
+          <table className="market-table leaders-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Pos</th>
+                <th>Hit Games</th>
+                <th>No-Hit</th>
+                <th>Total H</th>
+                <th>Rate</th>
+                <th>Last 10</th>
+                <th>Last Game</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {team.players.map((player, index) => (
+                <tr key={player.playerId}>
+                  <td className="rank-cell">{index + 1}</td>
+                  <td><strong>{player.name}</strong></td>
+                  <td>{player.position}</td>
+                  <td className="value good">{player.gamesWithHit}/{player.games}</td>
+                  <td className="value bad">{player.gamesWithoutHit}</td>
+                  <td className="value">{player.hits}</td>
+                  <td>{player.hitRate}</td>
+                  <td>
+                    <span className="pattern">
+                      {player.gamePattern.map((game, gameIndex) => (
+                        <span key={`${game.date}-${gameIndex}`} className={game.hadHit ? 'mark hit-mark' : 'mark miss-mark'} title={`${game.date}: ${game.line}`}>
+                          {game.hadHit ? 'H' : '0'}
+                        </span>
+                      ))}
+                    </span>
+                  </td>
+                  <td>{player.lastGameLine}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );

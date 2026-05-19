@@ -5,13 +5,13 @@ import type { PlayerRanking, RankingsPayload, TeamRanking } from '@/lib/types';
 
 type LoadState = 'loading' | 'ready' | 'refreshing' | 'error';
 
-function PatternDots({ player }: { player: PlayerRanking }) {
+function PatternStrip({ player }: { player: PlayerRanking }) {
   return (
     <span className="pattern" aria-label={`${player.gamesWithHit} hit games and ${player.gamesWithoutHit} no-hit games`}>
       {player.gamePattern.map((game, index) => (
         <span
           key={`${game.date}-${index}`}
-          className={game.hadHit ? 'dot hit-dot' : 'dot miss-dot'}
+          className={game.hadHit ? 'mark hit-mark' : 'mark miss-mark'}
           title={`${game.date}: ${game.line}`}
         >
           {game.hadHit ? 'H' : '0'}
@@ -21,75 +21,101 @@ function PatternDots({ player }: { player: PlayerRanking }) {
   );
 }
 
-function PlayerRow({ player, rank }: { player: PlayerRanking; rank: number }) {
+function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <li className="player">
-      <span className="rank">{rank}</span>
-      <span>
-        <span className="name">{player.name}</span>
-        <span className="statline">
-          {player.position} · {player.gamesWithHit} games with a hit · {player.gamesWithoutHit} without · {player.hits} total hits
-        </span>
-        <PatternDots player={player} />
-      </span>
-      <span className="hits">{player.gamesWithHit}/{player.games}</span>
-    </li>
+    <div className="mini-stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
-function TeamCard({ team }: { team: TeamRanking }) {
+function TeamMarket({ team }: { team: TeamRanking }) {
   return (
-    <article className="card team-card">
-      <div className="team-head">
+    <article className="market-card">
+      <div className="market-head">
         <div>
+          <span className="ticker">{team.abbreviation}</span>
           <h2>{team.teamName}</h2>
-          <p className="muted" style={{ margin: '4px 0 0' }}>{team.abbreviation}</p>
         </div>
-        <a className="btn" href={`/team/${team.teamId}`}>Open</a>
+        <a className="mini-link" href={`/team/${team.teamId}`}>Detail</a>
       </div>
-      <ol className="rank-list">
-        {team.players.map((player, index) => (
-          <PlayerRow key={player.playerId} player={player} rank={index + 1} />
-        ))}
-      </ol>
+
+      <table className="market-table team-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Hit</th>
+            <th>No</th>
+            <th>Total</th>
+            <th>Last 10</th>
+          </tr>
+        </thead>
+        <tbody>
+          {team.players.map((player, index) => (
+            <tr key={player.playerId}>
+              <td className="rank-cell">{index + 1}</td>
+              <td>
+                <strong>{player.name}</strong>
+                <span className="subline">{player.position} · last: {player.lastGameLine}</span>
+              </td>
+              <td className="value good">{player.gamesWithHit}/{player.games}</td>
+              <td className="value bad">{player.gamesWithoutHit}</td>
+              <td className="value">{player.hits}</td>
+              <td><PatternStrip player={player} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </article>
   );
 }
 
 function LeaderTable({ data }: { data: RankingsPayload }) {
   return (
-    <div className="card table-wrap">
-      <h2>League-wide consistency top 25</h2>
-      <p className="muted">Ranked by games with at least one hit in each player&apos;s last 10 games.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Team</th>
-            <th>Hit Games</th>
-            <th>No-Hit Games</th>
-            <th>Total Hits</th>
-            <th>Rate</th>
-            <th>Last 10</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.leaders.map((player, index) => (
-            <tr key={player.playerId}>
-              <td>{index + 1}</td>
-              <td><strong>{player.name}</strong></td>
-              <td>{player.abbreviation}</td>
-              <td>{player.gamesWithHit}/{player.games}</td>
-              <td>{player.gamesWithoutHit}</td>
-              <td>{player.hits}</td>
-              <td>{player.hitRate}</td>
-              <td><PatternDots player={player} /></td>
+    <section className="panel table-panel">
+      <div className="panel-head">
+        <div>
+          <span className="section-label">Exchange board</span>
+          <h2>League consistency top 25</h2>
+        </div>
+        <span className="micro-copy">Ranked by games with 1+ hit</span>
+      </div>
+      <div className="table-scroll">
+        <table className="market-table leaders-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Hit Games</th>
+              <th>No-Hit</th>
+              <th>Total H</th>
+              <th>Rate</th>
+              <th>Last 10</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {data.leaders.map((player, index) => (
+              <tr key={player.playerId}>
+                <td className="rank-cell">{index + 1}</td>
+                <td>
+                  <strong>{player.name}</strong>
+                  <span className="subline">{player.position} · {player.lastGameLine}</span>
+                </td>
+                <td>{player.abbreviation}</td>
+                <td className="value good">{player.gamesWithHit}/{player.games}</td>
+                <td className="value bad">{player.gamesWithoutHit}</td>
+                <td className="value">{player.hits}</td>
+                <td>{player.hitRate}</td>
+                <td><PatternStrip player={player} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -131,64 +157,58 @@ export default function Dashboard({ initialData = null }: { initialData?: Rankin
     });
   }, [data, query]);
 
+  const trackedPlayers = data ? data.teams.reduce((sum, team) => sum + team.players.length, 0) : 0;
+  const bestRate = data?.leaders[0] ? `${data.leaders[0].gamesWithHit}/${data.leaders[0].games}` : '—';
+
   return (
     <main className="page">
-      <section className="header">
-        <div>
-          <p className="eyebrow">Daily MLB hit consistency</p>
-          <h1>Top 3 hit-game players by team.</h1>
-          <p className="lede">
-            This ranks hitters by how often they recorded at least one hit in their last 10 games played. Total hits are used as the tiebreaker.
-          </p>
+      <header className="topbar">
+        <div className="brand">
+          <span className="logo-mark">MLB</span>
+          <div>
+            <h1>Hit Consistency Tracker</h1>
+            <p>Top 3 per team by games with 1+ hit in last 10.</p>
+          </div>
         </div>
-        <div className="toolbar">
+        <div className="actions">
           <button className="btn primary" disabled={state === 'refreshing'} onClick={() => load('/api/refresh', 'refreshing')}>
-            {state === 'refreshing' ? 'Refreshing...' : 'Refresh Data'}
+            {state === 'refreshing' ? 'Refreshing' : 'Refresh'}
           </button>
-          <a className="btn" href="/api/export">Export CSV</a>
+          <a className="btn" href="/api/export">CSV</a>
         </div>
-      </section>
+      </header>
 
-      {error && <div className="card error">{error}</div>}
+      {error && <div className="alert">{error}</div>}
 
       {data && (
         <>
-          <div className="status">
-            <span className="pill">Updated: {data.generatedAtSanFrancisco}</span>
-            <span className="pill">Time zone: San Francisco</span>
-            <span className="pill">Season: {data.season}</span>
-            <span className="pill">Source: {data.source}</span>
-            <span className="pill">Cache: {data.cache}</span>
-          </div>
-
-          <section className="two-col section">
-            <LeaderTable data={data} />
-            <div className="card">
-              <h2>What this means</h2>
-              <p className="muted">A player at 8/10 had at least one hit in 8 of his last 10 games. A 0 means that game had no hit.</p>
-              <ol className="rank-list">
-                <li className="player"><span className="rank">1</span><span><span className="name">Primary stat</span><span className="statline">Games with at least one hit</span></span><span className="hits">8/10</span></li>
-                <li className="player"><span className="rank">2</span><span><span className="name">Tiebreaker</span><span className="statline">Total hits in those 10 games</span></span><span className="hits">H</span></li>
-                <li className="player"><span className="rank">3</span><span><span className="name">Before using it</span><span className="statline">Check today&apos;s lineup separately</span></span><span className="hits">Live</span></li>
-              </ol>
-            </div>
+          <section className="status-grid">
+            <MiniStat label="Updated SF" value={data.generatedAtSanFrancisco} />
+            <MiniStat label="Teams" value={data.teams.length} />
+            <MiniStat label="Players" value={trackedPlayers} />
+            <MiniStat label="Best rate" value={bestRate} />
+            <MiniStat label="Cache" value={data.cache} />
           </section>
 
-          <section className="section">
-            <div className="controls">
-              <input className="search" placeholder="Search team or player..." value={query} onChange={(event) => setQuery(event.target.value)} />
-              <span className="muted">Showing {filteredTeams.length} teams</span>
-            </div>
-            <div className="grid">
-              {filteredTeams.map((team) => <TeamCard key={team.teamId} team={team} />)}
-            </div>
+          <LeaderTable data={data} />
+
+          <section className="filter-row">
+            <input className="search" placeholder="Search team or player" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <span>{filteredTeams.length} teams</span>
+            <span className="legend"><b className="hit-sample">H</b> hit game <b className="miss-sample">0</b> no-hit game</span>
           </section>
 
-          <p className="footer-note">{data.note} MLB data can lag during live games. Always verify current starting lineups separately.</p>
+          <section className="market-grid">
+            {filteredTeams.map((team) => <TeamMarket key={team.teamId} team={team} />)}
+          </section>
+
+          <footer className="footer-note">
+            {data.note} Verify current starting lineups separately before making any decisions.
+          </footer>
         </>
       )}
 
-      {!data && state === 'loading' && <div className="card">Loading MLB consistency rankings...</div>}
+      {!data && state === 'loading' && <div className="panel loading">Loading MLB consistency rankings...</div>}
     </main>
   );
 }
