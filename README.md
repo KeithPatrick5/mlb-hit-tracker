@@ -1,65 +1,44 @@
-# MLB Hit Tracker
+# MLB Hit Consistency Tracker
 
-A Vercel-ready Next.js dashboard that ranks the top 3 hitters on every MLB team by hits over each player's last 10 games played.
+Vercel-ready Next.js dashboard for ranking the top 3 MLB hitters on each team by hit consistency over their last 10 games played.
 
-## What it shows
+## What it ranks
 
-- Top 3 hitters per MLB team
-- League-wide top 25 leaderboard
-- Team detail pages
-- Manual refresh button
-- CSV export
-- Last updated time shown in San Francisco time
-- Optional Redis cache using Upstash REST env vars
+Primary stat:
 
-## Local setup
+- Games with at least one hit in the player's last 10 games played with at least one at-bat
 
-```bash
-npm install
-npm run dev
-```
+Tiebreakers:
 
-Open `http://localhost:3000`.
+1. Total hits in those 10 games
+2. Last-10 batting average
+3. Player name
 
-## Deploy to Vercel
+Example:
 
-```bash
-git add .
-git commit -m "Add MLB hit tracker dashboard"
-git push origin main
-```
+- 7/10 means the player recorded at least one hit in 7 of his last 10 games
+- 3 no-hit games means 3 of those 10 games had zero hits
+- The H/0 pattern shows each game in the last 10, newest first
 
-Then import the repo into Vercel or connect it to an existing Vercel project.
+## Routes
 
-## Daily refresh timing
+- `/` dashboard
+- `/api/rankings` JSON rankings
+- `/api/refresh` manual refresh endpoint
+- `/api/export` CSV download
+- `/team/[teamId]` team detail page
 
-`vercel.json` runs the refresh endpoint every day at `15:00 UTC`, which is `8:00 AM San Francisco time` during Pacific Daylight Time.
+## Deploy
 
-Vercel cron schedules are UTC-only, so adjust the schedule later if you want exact local behavior across daylight saving changes.
+Push to GitHub and import the repo into Vercel as a Next.js project.
 
-## Optional persistent cache
+## Optional cache
 
-The app works without storage by fetching fresh data when requested. For better performance and stable cached results, create an Upstash Redis database and add these Vercel environment variables:
+Add these Vercel environment variables for Upstash Redis caching:
 
 ```bash
-UPSTASH_REDIS_REST_URL=your_upstash_rest_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_rest_token
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ```
 
-Optional cron protection:
-
-```bash
-CRON_SECRET=some_long_random_string
-```
-
-Then call:
-
-```text
-/api/refresh?secret=some_long_random_string
-```
-
-The built-in Vercel cron uses `/api/refresh?cron=1` and is allowed automatically.
-
-## Notes
-
-This uses public MLB Stats API endpoints. For a paid commercial product, verify data licensing before selling access.
+Without Redis, the app still works live, but refreshes are slower because it has to fetch MLB data directly.

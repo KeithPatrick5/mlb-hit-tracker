@@ -1,3 +1,11 @@
+export type GameResult = {
+  date: string;
+  hits: number;
+  atBats: number;
+  hadHit: boolean;
+  line: string;
+};
+
 export type PlayerRanking = {
   playerId: number;
   name: string;
@@ -10,6 +18,9 @@ export type PlayerRanking = {
   atBats: number;
   average: string;
   gamesWithHit: number;
+  gamesWithoutHit: number;
+  hitRate: string;
+  gamePattern: GameResult[];
   lastGameDate: string | null;
   lastGameLine: string;
 };

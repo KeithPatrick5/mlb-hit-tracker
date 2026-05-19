@@ -1,21 +1,38 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { RankingsPayload, TeamRanking } from '@/lib/types';
+import type { PlayerRanking, RankingsPayload, TeamRanking } from '@/lib/types';
 
 type LoadState = 'loading' | 'ready' | 'refreshing' | 'error';
 
-function PlayerRow({ player, rank }: { player: TeamRanking['players'][number]; rank: number }) {
+function PatternDots({ player }: { player: PlayerRanking }) {
+  return (
+    <span className="pattern" aria-label={`${player.gamesWithHit} hit games and ${player.gamesWithoutHit} no-hit games`}>
+      {player.gamePattern.map((game, index) => (
+        <span
+          key={`${game.date}-${index}`}
+          className={game.hadHit ? 'dot hit-dot' : 'dot miss-dot'}
+          title={`${game.date}: ${game.line}`}
+        >
+          {game.hadHit ? 'H' : '0'}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function PlayerRow({ player, rank }: { player: PlayerRanking; rank: number }) {
   return (
     <li className="player">
       <span className="rank">{rank}</span>
       <span>
         <span className="name">{player.name}</span>
         <span className="statline">
-          {player.position} · hit in {player.gamesWithHit}/{player.games} · {player.average} AVG · last {player.lastGameLine}
+          {player.position} · {player.gamesWithHit} games with a hit · {player.gamesWithoutHit} without · {player.hits} total hits
         </span>
+        <PatternDots player={player} />
       </span>
-      <span className="hits">{player.hits} H</span>
+      <span className="hits">{player.gamesWithHit}/{player.games}</span>
     </li>
   );
 }
@@ -42,18 +59,19 @@ function TeamCard({ team }: { team: TeamRanking }) {
 function LeaderTable({ data }: { data: RankingsPayload }) {
   return (
     <div className="card table-wrap">
-      <h2>League-wide top 25</h2>
-      <p className="muted">Best recent hit volume across all active MLB hitters.</p>
+      <h2>League-wide consistency top 25</h2>
+      <p className="muted">Ranked by games with at least one hit in each player&apos;s last 10 games.</p>
       <table>
         <thead>
           <tr>
             <th>Rank</th>
             <th>Player</th>
             <th>Team</th>
-            <th>Hits</th>
             <th>Hit Games</th>
-            <th>AVG</th>
-            <th>Last Game</th>
+            <th>No-Hit Games</th>
+            <th>Total Hits</th>
+            <th>Rate</th>
+            <th>Last 10</th>
           </tr>
         </thead>
         <tbody>
@@ -62,10 +80,11 @@ function LeaderTable({ data }: { data: RankingsPayload }) {
               <td>{index + 1}</td>
               <td><strong>{player.name}</strong></td>
               <td>{player.abbreviation}</td>
-              <td>{player.hits}</td>
               <td>{player.gamesWithHit}/{player.games}</td>
-              <td>{player.average}</td>
-              <td>{player.lastGameLine}</td>
+              <td>{player.gamesWithoutHit}</td>
+              <td>{player.hits}</td>
+              <td>{player.hitRate}</td>
+              <td><PatternDots player={player} /></td>
             </tr>
           ))}
         </tbody>
@@ -74,9 +93,9 @@ function LeaderTable({ data }: { data: RankingsPayload }) {
   );
 }
 
-export default function Dashboard() {
-  const [data, setData] = useState<RankingsPayload | null>(null);
-  const [state, setState] = useState<LoadState>('loading');
+export default function Dashboard({ initialData = null }: { initialData?: RankingsPayload | null }) {
+  const [data, setData] = useState<RankingsPayload | null>(initialData);
+  const [state, setState] = useState<LoadState>(initialData ? 'ready' : 'loading');
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
@@ -96,8 +115,8 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    load();
-  }, []);
+    if (!initialData) load();
+  }, [initialData]);
 
   const filteredTeams = useMemo(() => {
     if (!data) return [];
@@ -116,10 +135,10 @@ export default function Dashboard() {
     <main className="page">
       <section className="header">
         <div>
-          <p className="eyebrow">Daily MLB hitter form</p>
-          <h1>Top 3 hit leaders by team.</h1>
+          <p className="eyebrow">Daily MLB hit consistency</p>
+          <h1>Top 3 hit-game players by team.</h1>
           <p className="lede">
-            Rankings are based on hits over each player&apos;s last 10 games played with at least one at-bat. Built for quick daily checks, not miracle locks.
+            This ranks hitters by how often they recorded at least one hit in their last 10 games played. Total hits are used as the tiebreaker.
           </p>
         </div>
         <div className="toolbar">
@@ -145,12 +164,12 @@ export default function Dashboard() {
           <section className="two-col section">
             <LeaderTable data={data} />
             <div className="card">
-              <h2>Combo builder starter rules</h2>
-              <p className="muted">Use this as a shortlist, then check lineups, opponent pitcher, injuries, and odds before doing anything dumb.</p>
+              <h2>What this means</h2>
+              <p className="muted">A player at 8/10 had at least one hit in 8 of his last 10 games. A 0 means that game had no hit.</p>
               <ol className="rank-list">
-                <li className="player"><span className="rank">1</span><span><span className="name">Start with 10+ hits</span><span className="statline">Recent volume filter</span></span><span className="hits">10+</span></li>
-                <li className="player"><span className="rank">2</span><span><span className="name">Hit in 7 of 10</span><span className="statline">Consistency filter</span></span><span className="hits">7/10</span></li>
-                <li className="player"><span className="rank">3</span><span><span className="name">Confirm starting lineup</span><span className="statline">Do not skip this</span></span><span className="hits">Live</span></li>
+                <li className="player"><span className="rank">1</span><span><span className="name">Primary stat</span><span className="statline">Games with at least one hit</span></span><span className="hits">8/10</span></li>
+                <li className="player"><span className="rank">2</span><span><span className="name">Tiebreaker</span><span className="statline">Total hits in those 10 games</span></span><span className="hits">H</span></li>
+                <li className="player"><span className="rank">3</span><span><span className="name">Before using it</span><span className="statline">Check today&apos;s lineup separately</span></span><span className="hits">Live</span></li>
               </ol>
             </div>
           </section>
@@ -165,11 +184,11 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <p className="footer-note">{data.note} MLB data can lag during live games. For props or combos, verify current starting lineups separately before using the list.</p>
+          <p className="footer-note">{data.note} MLB data can lag during live games. Always verify current starting lineups separately.</p>
         </>
       )}
 
-      {!data && state === 'loading' && <div className="card">Loading MLB rankings...</div>}
+      {!data && state === 'loading' && <div className="card">Loading MLB consistency rankings...</div>}
     </main>
   );
 }

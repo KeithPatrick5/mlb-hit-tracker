@@ -169,6 +169,19 @@ function buildRankingForPlayer(input: {
     atBats,
     average: formatAverage(hits, atBats),
     gamesWithHit,
+    gamesWithoutHit: splits.length - gamesWithHit,
+    hitRate: `${Math.round((gamesWithHit / splits.length) * 100)}%`,
+    gamePattern: splits.map((split) => {
+      const splitHits = asNumber(split.stat?.hits);
+      const splitAtBats = asNumber(split.stat?.atBats);
+      return {
+        date: split.date || '',
+        hits: splitHits,
+        atBats: splitAtBats,
+        hadHit: splitHits > 0,
+        line: `${splitHits}-for-${splitAtBats}`,
+      };
+    }),
     lastGameDate: last?.date || null,
     lastGameLine: `${lastHits}-for-${lastAtBats}`,
   };
@@ -200,7 +213,7 @@ export async function buildRankings(): Promise<RankingsPayload> {
         }),
       )
       .filter((player): player is PlayerRanking => Boolean(player))
-      .sort((a, b) => b.hits - a.hits || b.gamesWithHit - a.gamesWithHit || b.atBats - a.atBats || a.name.localeCompare(b.name));
+      .sort((a, b) => b.gamesWithHit - a.gamesWithHit || b.hits - a.hits || Number.parseFloat(b.average) - Number.parseFloat(a.average) || a.name.localeCompare(b.name));
 
     rankingsByTeam.set(roster.team.id, teamRankings);
   }
@@ -217,7 +230,7 @@ export async function buildRankings(): Promise<RankingsPayload> {
 
   const leaders = Array.from(rankingsByTeam.values())
     .flat()
-    .sort((a, b) => b.hits - a.hits || b.gamesWithHit - a.gamesWithHit || b.atBats - a.atBats || a.name.localeCompare(b.name))
+    .sort((a, b) => b.gamesWithHit - a.gamesWithHit || b.hits - a.hits || Number.parseFloat(b.average) - Number.parseFloat(a.average) || a.name.localeCompare(b.name))
     .slice(0, 25);
 
   return {
@@ -225,7 +238,7 @@ export async function buildRankings(): Promise<RankingsPayload> {
     generatedAtSanFrancisco: formatSanFranciscoTime(generatedAt),
     season,
     source: SOURCE,
-    note: 'Rankings use each player\'s last 10 games played with at least one at-bat.',
+    note: 'Rankings use each player\'s last 10 games played with at least one at-bat. Primary rank is games with at least one hit, then total hits as the tiebreaker.',
     teams: teamRankings,
     leaders,
     cache: 'live',
@@ -234,7 +247,7 @@ export async function buildRankings(): Promise<RankingsPayload> {
 
 export function rankingsToCsv(payload: RankingsPayload): string {
   const rows = [
-    ['team', 'team_abbreviation', 'rank', 'player', 'position', 'last_10_hits', 'games_counted', 'last_10_average', 'games_with_hit', 'last_game_date', 'last_game_line'],
+    ['team', 'team_abbreviation', 'rank', 'player', 'position', 'hit_games_last_10', 'no_hit_games_last_10', 'hit_rate', 'total_hits_last_10', 'games_counted', 'last_10_average', 'last_10_pattern', 'last_game_date', 'last_game_line'],
   ];
 
   for (const team of payload.teams) {
@@ -245,10 +258,13 @@ export function rankingsToCsv(payload: RankingsPayload): string {
         String(index + 1),
         player.name,
         player.position,
+        String(player.gamesWithHit),
+        String(player.gamesWithoutHit),
+        player.hitRate,
         String(player.hits),
         String(player.games),
         player.average,
-        String(player.gamesWithHit),
+        player.gamePattern.map((game) => (game.hadHit ? 'H' : '0')).join(''),
         player.lastGameDate || '',
         player.lastGameLine,
       ]);

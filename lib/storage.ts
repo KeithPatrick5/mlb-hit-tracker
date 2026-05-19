@@ -1,6 +1,6 @@
 import type { RankingsPayload } from './types';
 
-const CACHE_KEY = 'mlb-hit-tracker:rankings:v1';
+const CACHE_KEY = 'mlb-hit-tracker:hit-consistency:v2';
 const TTL_SECONDS = 60 * 60 * 18;
 
 type RedisResult<T> = { result?: T };
