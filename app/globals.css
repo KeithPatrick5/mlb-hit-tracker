@@ -74,18 +74,22 @@ h1 { margin: 0; font-size: 16px; letter-spacing: .01em; line-height: 1.1; }
 .legend { margin-left: auto; }
 .legend b { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin: 0 3px; font-size: 9px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 
-.market-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.market-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 620px), 1fr)); gap: 8px; }
 .market-card { min-width: 0; }
 .team-table th:first-child, .team-table td:first-child { width: 24px; }
 .team-table th:nth-child(2), .team-table td:nth-child(2) { min-width: 130px; }
-.team-table th:nth-child(6), .team-table td:nth-child(6) { width: 164px; max-width: 164px; overflow: hidden; }
+.team-table th:nth-child(6), .team-table td:nth-child(6) { width: 170px; max-width: 170px; overflow: hidden; }
+.team-table .pattern { max-width: 170px; overflow: hidden; }
 
 .alert { margin: 8px 0; border: 1px solid rgba(217,83,79,.55); background: var(--red-dim); color: #ffd1cf; padding: 8px 10px; }
 .loading { padding: 14px; margin-top: 8px; color: var(--muted); }
 .footer-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
 
-@media (max-width: 1420px) { .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 1160px) { .status-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) {
+  .market-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 760px) {
   .page { width: min(100% - 12px, 1480px); padding-top: 6px; }
   .topbar { align-items: flex-start; flex-direction: column; }
@@ -203,6 +207,7 @@ h1 { margin: 0; font-size: 16px; letter-spacing: .01em; line-height: 1.1; }
     padding-top: 5px;
     border-top: 1px solid var(--border-soft);
   }
+  .team-table .pattern { max-width: none; overflow: visible; }
   .pattern { display: flex; flex-wrap: wrap; gap: 3px; }
   .mark { width: 18px; height: 18px; font-size: 9px; }
 
